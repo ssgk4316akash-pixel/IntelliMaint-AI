@@ -16,9 +16,6 @@ from sqlalchemy.types import JSON
 
 
 logger = logging.getLogger(__name__)
-DEFAULT_DATABASE_URL = (
-    "postgresql+psycopg://intellimaint:REDACTED@127.0.0.1:5432/intellimaint"
-)
 RETRY_SECONDS = 15.0
 
 _lock = threading.Lock()
@@ -56,7 +53,7 @@ class AssessmentRecord(Base):
 
 
 def database_target(url: str | None = None) -> str:
-    raw = url or os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    raw = url or os.environ.get("DATABASE_URL")  if not raw:     return "Database not configured"
     parts = urlsplit(raw)
     if parts.password is None:
         return raw
@@ -70,7 +67,7 @@ def database_target(url: str | None = None) -> str:
 
 def configure_database(url: str | None = None) -> bool:
     global _engine, _session_factory, _connected, _last_error, _next_retry, _logged_disconnect
-    raw_url = url or os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+    raw_url = url or os.environ.get("DATABASE_URL")  if not raw_url:     _mark_disconnected(         RuntimeError("DATABASE_URL is not configured")     )     return False
     engine_kwargs: dict[str, Any] = {"pool_pre_ping": True}
     if raw_url.startswith("postgresql"):
         engine_kwargs["connect_args"] = {"connect_timeout": 3}
