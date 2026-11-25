@@ -53,16 +53,25 @@ class AssessmentRecord(Base):
 
 
 def database_target(url: str | None = None) -> str:
-    def database_target(url: str | None = None) -> str:     raw = url or os.environ.get("DATABASE_URL")      if not raw:         return "Database not configured"      parts = urlsplit(raw)     if parts.password is None:         return raw      host = parts.hostname or ""     if parts.port:         host = f"{host}:{parts.port}"     username = parts.username or ""     netloc = f"{username}:***@{host}" if username else host     return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
+    raw = url or os.environ.get("DATABASE_URL")
+
+    if not raw:
+        return "Database not configured"
+
     parts = urlsplit(raw)
     if parts.password is None:
         return raw
+
     host = parts.hostname or ""
     if parts.port:
         host = f"{host}:{parts.port}"
+
     username = parts.username or ""
     netloc = f"{username}:***@{host}" if username else host
-    return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
+
+    return urlunsplit(
+        (parts.scheme, netloc, parts.path, parts.query, parts.fragment)
+    )
 
 
 def configure_database(url: str | None = None) -> bool:
@@ -77,6 +86,8 @@ def configure_database(url: str | None = None) -> bool:
         return False
 
     engine_kwargs: dict[str, Any] = {"pool_pre_ping": True}
+
+    if raw_url.startswith("postgresql"):
         engine_kwargs["connect_args"] = {"connect_timeout": 3}
 
     engine = None
